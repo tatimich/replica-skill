@@ -1,0 +1,35 @@
+{%- set e = "embed=1" if embed else "" -%}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}{{ marca.nome }}{% endblock %}</title>
+  <meta name="description" content="{% block descricao %}Busca de leis, decretos, portarias e demais atos normativos.{% endblock %}">
+  <link rel="stylesheet" href="{{ base }}/marca.css">
+  <link rel="stylesheet" href="{{ base }}/static/style.css">
+  {% if embed %}<script src="{{ base }}/static/altura.js" defer></script>{% endif %}
+</head>
+<body class="{{ 'embutido' if embed else '' }}">
+  <a class="pular" href="#conteudo">Ir para o conteúdo</a>
+  {% if not embed %}
+  <header class="topo">
+    <div class="topo-interno">
+      <a class="marca" href="{{ base }}/">
+        <span class="marca-nome">{{ marca.nome }}</span>
+        {% if marca.subtitulo %}<span class="marca-sub">{{ marca.subtitulo }}</span>{% endif %}
+      </a>
+    </div>
+  </header>
+  {% endif %}
+  <main id="conteudo" class="pagina">
+    {% block conteudo %}{% endblock %}
+  </main>
+  {% if not embed %}
+  <footer class="rodape">
+    <p>{{ marca.rodape }}</p>
+    {% if marca.linha_contato %}<p>{{ marca.linha_contato }}</p>{% endif %}
+  </footer>
+  {% endif %}
+</body>
+</html>

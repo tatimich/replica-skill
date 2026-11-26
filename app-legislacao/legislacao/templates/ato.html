@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}{{ ato | titulo }} | {{ marca.nome }}{% endblock %}
+{% block descricao %}{{ ato.ementa[:160] }}{% endblock %}
+{% block conteudo %}
+<p class="voltar"><a href="{{ voltar or (base ~ '/' ~ ('?embed=1' if embed else '')) }}">← Voltar para a busca</a></p>
+<article class="detalhe">
+  <header>
+    <div class="ato-meta">
+      <span class="etiqueta">{{ ato.tipo }}</span>
+      {% if ato.categoria %}<a class="etiqueta clara" href="{{ base }}/?categoria={{ ato.categoria | urlencode }}{{ '&embed=1' if embed }}">{{ ato.categoria }}</a>{% endif %}
+      <span class="etiqueta {{ 'aviso' if ato.situacao in ('revogado', 'alterado') else 'clara' }}">{{ SITUACOES[ato.situacao] }}</span>
+    </div>
+    <h1>{{ ato | titulo }}</h1>
+    {% if ato.orgao %}<p class="orgao">{{ ato.orgao }}</p>{% endif %}
+    <p class="ementa destaque">{{ ato.ementa }}</p>
+  </header>
+
+  <div class="baixar">
+    <a class="botao" href="{{ base }}/atos/{{ ato.id }}/pdf">Baixar PDF</a>
+    <a class="botao secundario" href="{{ base }}/atos/{{ ato.id }}/docx">Baixar Word</a>
+    {% if ato.fonte_url %}<a class="botao secundario" href="{{ ato.fonte_url }}" target="_blank" rel="noopener">Ver na fonte oficial</a>{% endif %}
+  </div>
+
+  <dl class="ficha">
+    <div><dt>Data</dt><dd><time datetime="{{ ato.data }}">{{ ato.data | data_extenso }}</time></dd></div>
+    {% if ato.numero %}<div><dt>Número</dt><dd>{{ ato.numero }}</dd></div>{% endif %}
+    {% if ato.orgao %}<div><dt>Órgão</dt><dd>{{ ato.orgao }}</dd></div>{% endif %}
+    <div><dt>Situação</dt><dd>{{ SITUACOES[ato.situacao] }}</dd></div>
+  </dl>
+
+  <section class="texto" aria-label="Texto integral">
+    {% if paragrafos %}
+      {% for p in paragrafos %}<p>{{ p }}</p>{% endfor %}
+    {% else %}
+      <p class="vazio">O texto integral deste ato ainda não foi cadastrado.{% if ato.fonte_url %} Consulte a fonte oficial.{% endif %}</p>
+    {% endif %}
+  </section>
+</article>
+{% endblock %}

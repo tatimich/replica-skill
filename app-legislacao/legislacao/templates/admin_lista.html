@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}Administração | {{ marca.nome }}{% endblock %}
+{% block conteudo %}
+<h1>Administração</h1>
+<p class="acoes"><a class="botao" href="{{ base }}/admin/novo">Cadastrar ato</a> <a class="botao secundario" href="{{ base }}/admin/importar">Importar CSV</a></p>
+<form class="busca" action="{{ base }}/admin" method="get" role="search">
+  <label class="visually-hidden" for="q">Buscar</label>
+  <input id="q" name="q" type="search" value="{{ f.q }}" placeholder="Buscar atos cadastrados">
+  <button type="submit">Buscar</button>
+</form>
+<p>{{ total }} ato(s).</p>
+<table class="tabela">
+  <thead><tr><th>Data</th><th>Ato</th><th>Categoria</th><th></th></tr></thead>
+  <tbody>
+  {% for a in atos %}
+    <tr><td>{{ a.data | data_curta }}</td><td>{{ a | titulo }}</td><td>{{ a.categoria }}</td>
+      <td><a href="{{ base }}/admin/atos/{{ a.id }}">Editar</a></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titulo %}{{ 'Editar' if ato.id else 'Cadastrar' }} ato | {{ marca.nome }}{% endblock %}
+{% block conteudo %}
+<p class="voltar"><a href="{{ base }}/admin">← Administração</a></p>
+<h1>{{ 'Editar ato' if ato.id else 'Cadastrar ato' }}</h1>
+{% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
+<form class="formulario" method="post" action="{{ base }}/admin/{{ 'atos/' ~ ato.id if ato.id else 'novo' }}">
+  <div class="linha">
+    <label>Tipo *<input name="tipo" required value="{{ ato.tipo or '' }}" placeholder="Lei, Decreto, Portaria, Resolução…"></label>
+    <label>Número<input name="numero" value="{{ ato.numero or '' }}" placeholder="ex.: 1.234"></label>
+    <label>Data *<input name="data" type="date" required value="{{ ato.data or '' }}"></label>
+  </div>
+  <div class="linha">
+    <label>Órgão<input name="orgao" value="{{ ato.orgao or '' }}" placeholder="Órgão que publicou"></label>
+    <label>Categoria<input name="categoria" value="{{ ato.categoria or '' }}" placeholder="Tema para o filtro"></label>
+    <label>Situação
+      <select name="situacao">{% for k, v in SITUACOES.items() %}<option value="{{ k }}" {{ 'selected' if (ato.situacao or 'sem_informacao') == k }}>{{ v }}</option>{% endfor %}</select>
+    </label>
+  </div>
+  <label>Link da fonte oficial<input name="fonte_url" type="url" value="{{ ato.fonte_url or '' }}" placeholder="https://"></label>
+  <label>Ementa *<textarea name="ementa" rows="3" required>{{ ato.ementa or '' }}</textarea></label>
+  <label>Texto integral<textarea name="texto" rows="16">{{ ato.texto or '' }}</textarea></label>
+  <p><button type="submit">Salvar</button></p>
+</form>
+{% if ato.id %}
+<form method="post" action="{{ base }}/admin/atos/{{ ato.id }}/excluir" class="excluir">
+  <button type="submit" class="perigo">Excluir este ato</button>
+</form>
+{% endif %}
+{% endblock %}

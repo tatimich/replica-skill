@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block titulo %}{% if f.q %}“{{ f.q }}”: {% endif %}Legislação | {{ marca.nome }}{% endblock %}
+{% block conteudo %}
+<form class="busca" action="{{ base }}/" method="get" role="search">
+  {% if embed %}<input type="hidden" name="embed" value="1">{% endif %}
+  <label class="visually-hidden" for="q">Buscar na legislação</label>
+  <input id="q" name="q" type="search" value="{{ f.q }}" placeholder="Busque por assunto, número ou palavra do texto" autocomplete="off">
+  <button type="submit">Buscar</button>
+</form>
+
+<div class="layout">
+  <aside class="filtros" aria-label="Filtros">
+    <form action="{{ base }}/" method="get" class="filtros-form">
+      {% if embed %}<input type="hidden" name="embed" value="1">{% endif %}
+      <input type="hidden" name="q" value="{{ f.q }}">
+      <input type="hidden" name="categoria" value="{{ f.categoria }}">
+      <label for="ano">Ano</label>
+      <select id="ano" name="ano">
+        <option value="">Todos</option>
+        {% for a in facetas.anos %}<option value="{{ a.valor }}" {{ 'selected' if f.ano == a.valor }}>{{ a.valor }} ({{ a.total }})</option>{% endfor %}
+      </select>
+      <label for="tipo">Tipo de ato</label>
+      <select id="tipo" name="tipo">
+        <option value="">Todos</option>
+        {% for t in facetas.tipos %}<option value="{{ t.valor }}" {{ 'selected' if f.tipo == t.valor }}>{{ t.valor }} ({{ t.total }})</option>{% endfor %}
+      </select>
+      {% if facetas.orgaos %}
+      <label for="orgao">Órgão</label>
+      <select id="orgao" name="orgao">
+        <option value="">Todos</option>
+        {% for o in facetas.orgaos %}<option value="{{ o.valor }}" {{ 'selected' if f.orgao == o.valor }}>{{ o.valor }} ({{ o.total }})</option>{% endfor %}
+      </select>
+      {% endif %}
+      <label for="situacao">Situação</label>
+      <select id="situacao" name="situacao">
+        <option value="">Todas</option>
+        {% for k, v in SITUACOES.items() %}<option value="{{ k }}" {{ 'selected' if f.situacao == k }}>{{ v }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="secundario">Aplicar filtros</button>
+    </form>
+
+    <nav class="categorias" aria-label="Categorias">
+      <h2>Categorias</h2>
+      <ul>
+        <li><a href="{{ url_lista(base, params, categoria='', pagina=1) }}" {% if not f.categoria %}aria-current="page"{% endif %}>Todas</a></li>
+        {% for c in facetas.categorias %}
+        <li><a href="{{ url_lista(base, params, categoria=c.valor, pagina=1) }}" {% if f.categoria == c.valor %}aria-current="page"{% endif %}>{{ c.valor }} <span class="contagem">{{ c.total }}</span></a></li>
+        {% endfor %}
+      </ul>
+    </nav>
+  </aside>
+
+  <section class="resultados" aria-live="polite">
+    <div class="resumo">
+      <p><strong>{{ total }}</strong> {{ 'ato encontrado' if total == 1 else 'atos encontrados' }}
+        {% if f.categoria %} em <strong>{{ f.categoria }}</strong>{% endif %}
+        {% if f.ano %} de <strong>{{ f.ano }}</strong>{% endif %}
+      </p>
+      <form action="{{ base }}/" method="get" class="ordem">
+        {% for k, v in params.items() if k != 'ordem' and v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+        <label for="ordem">Ordenar</label>
+        <select id="ordem" name="ordem">
+          {% if f.q %}<option value="relevancia" {{ 'selected' if f.ordem in ('', 'relevancia') }}>Mais relevantes</option>{% endif %}
+          <option value="recentes" {{ 'selected' if f.ordem == 'recentes' or (not f.q and not f.ordem) }}>Mais recentes</option>
+          <option value="antigos" {{ 'selected' if f.ordem == 'antigos' }}>Mais antigos</option>
+        </select>
+        <button type="submit" class="secundario">Ok</button>
+      </form>
+    </div>
+
+    {% if f.q or f.categoria or f.ano or f.tipo or f.orgao or f.situacao %}
+    <p class="limpar"><a href="{{ url_lista(base, {'embed': params.get('embed', '')}) }}">Limpar busca e filtros</a></p>
+    {% endif %}
+
+    {% if not atos %}
+    <div class="vazio">
+      <p>Nenhum ato corresponde à busca.</p>
+      <p>Tente outras palavras, remova algum filtro ou use menos termos.</p>
+    </div>
+    {% endif %}
+
+    <ol class="lista-atos">
+      {% for a in atos %}
+      <li class="ato">
+        <div class="ato-meta">
+          <span class="etiqueta">{{ a.tipo }}</span>
+          {% if a.categoria %}<span class="etiqueta clara">{{ a.categoria }}</span>{% endif %}
+          {% if a.situacao in ('revogado', 'alterado') %}<span class="etiqueta aviso">{{ SITUACOES[a.situacao] }}</span>{% endif %}
+          <time datetime="{{ a.data }}">{{ a.data | data_curta }}</time>
+        </div>
+        <h3><a href="{{ base }}/atos/{{ a.id }}{{ '?' ~ e if e }}">{{ a | titulo }}</a></h3>
+        {% if a.orgao %}<p class="orgao">{{ a.orgao }}</p>{% endif %}
+        <p class="ementa">{{ a.ementa }}</p>
+        {% if a.trecho and a.tem_texto %}<p class="trecho">{{ a.trecho | destacar }}</p>{% endif %}
+        <p class="acoes">
+          <a href="{{ base }}/atos/{{ a.id }}/pdf">Baixar PDF</a>
+          <a href="{{ base }}/atos/{{ a.id }}/docx">Baixar Word</a>
+          {% if a.fonte_url %}<a href="{{ a.fonte_url }}" target="_blank" rel="noopener">Fonte oficial</a>{% endif %}
+        </p>
+      </li>
+      {% endfor %}
+    </ol>
+
+    {% if paginas > 1 %}
+    <nav class="paginacao" aria-label="Paginação">
+      {% if f.pagina > 1 %}<a href="{{ url_lista(base, params, pagina=f.pagina - 1) }}" rel="prev">Anterior</a>{% endif %}
+      <span>Página {{ f.pagina }} de {{ paginas }}</span>
+      {% if f.pagina < paginas %}<a href="{{ url_lista(base, params, pagina=f.pagina + 1) }}" rel="next">Próxima</a>{% endif %}
+    </nav>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

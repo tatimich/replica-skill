@@ -1,0 +1,16 @@
+id,area,feature,priority,original,clone,notes
+F01,busca,Filtro por categoria,must,inferido da URL,yes,lista lateral com contagem
+F02,busca,Filtro por ano,must,inferido da URL,yes,select com contagem
+F03,busca,Busca textual,must,não verificado,yes,FTS5 sem acento e por prefixo; frase exata com aspas
+F04,busca,Filtro por tipo/órgão/situação,should,não verificado,yes,
+F05,busca,Ordenação (relevância/recentes/antigos),should,não verificado,yes,
+F06,busca,Paginação,must,não verificado,yes,20 por página
+F07,detalhe,Página do ato com ficha e texto,must,não verificado,yes,
+F08,download,PDF no timbrado da marca,must,pedido da usuária,yes,marca.toml + logo
+F09,download,Word (DOCX) no timbrado da marca,should,pedido da usuária,yes,
+F10,integração,Embutir no site da marca (iframe com altura automática),must,pedido da usuária,yes,static/embed.js
+F11,integração,API JSON com CORS configurável,should,pedido da usuária,yes,/api/atos /api/facetas
+F12,integração,Publicar em subcaminho do site (/legislacao),should,pedido da usuária,yes,--root-path
+F13,admin,Cadastro/edição/exclusão de atos,must,—,yes,HTTP Basic + ADMIN_SENHA
+F14,admin,Importação CSV,must,—,yes,web e linha de comando
+F15,dados,Importador automático de fontes oficiais,could,—,no,depende de liberar rede e conferir termos
