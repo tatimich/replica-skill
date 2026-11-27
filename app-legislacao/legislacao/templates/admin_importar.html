@@ -3,7 +3,7 @@
 {% block conteudo %}
 <p class="voltar"><a href="{{ base }}/admin">← Administração</a></p>
 <h1>Importar atos (CSV)</h1>
-<p>Colunas: <code>tipo, numero, data, orgao, categoria, ementa, situacao, fonte_url, texto</code>. Obrigatórias: tipo, data e ementa. Separador vírgula ou ponto e vírgula, em UTF-8. Atos já cadastrados (mesmo tipo, número, órgão e data) são atualizados.</p>
+<p>Colunas: <code>tipo, numero, data, data_publicacao, orgao, categoria, ementa, situacao, fonte_url, revoga, altera, texto</code>. Obrigatórias: tipo, data e ementa. Em <code>revoga</code> e <code>altera</code>, separe vários atos com ponto e vírgula (ex.: <code>Portaria nº 23/2017; Portaria nº 11/2018</code>). Separador vírgula ou ponto e vírgula, em UTF-8. Atos já cadastrados (mesmo tipo, número, órgão e data) são atualizados.</p>
 {% if resultado %}
 <div class="{{ 'erro' if resultado[1] else 'sucesso' }}" role="status">
   <p>{{ resultado[0] }} ato(s) importado(s).</p>

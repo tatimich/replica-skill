@@ -22,11 +22,24 @@
   </div>
 
   <dl class="ficha">
-    <div><dt>Data</dt><dd><time datetime="{{ ato.data }}">{{ ato.data | data_extenso }}</time></dd></div>
+    <div><dt>Data do ato</dt><dd><time datetime="{{ ato.data }}">{{ ato.data | data_extenso }}</time></dd></div>
+    {% if ato.data_publicacao %}<div><dt>Publicação no D.O.U.</dt><dd><time datetime="{{ ato.data_publicacao }}">{{ ato.data_publicacao | data_extenso }}</time></dd></div>{% endif %}
     {% if ato.numero %}<div><dt>Número</dt><dd>{{ ato.numero }}</dd></div>{% endif %}
     {% if ato.orgao %}<div><dt>Órgão</dt><dd>{{ ato.orgao }}</dd></div>{% endif %}
     <div><dt>Situação</dt><dd>{{ SITUACOES[ato.situacao] }}</dd></div>
   </dl>
+
+  {% if ato.relacoes %}
+  <section class="relacoes" aria-labelledby="rel-titulo">
+    <h2 id="rel-titulo">Atos relacionados</h2>
+    <ul>
+      {% for r in ato.relacoes %}
+      <li><span class="rel-rotulo">{{ r.rotulo }}</span>
+        {% if r.id %}<a href="{{ base }}/atos/{{ r.id }}{{ '?embed=1' if embed }}">{{ r.titulo }}</a>{% else %}{{ r.titulo }}{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
 
   <section class="texto" aria-label="Texto integral">
     {% if paragrafos %}
@@ -35,5 +48,12 @@
       <p class="vazio">O texto integral deste ato ainda não foi cadastrado.{% if ato.fonte_url %} Consulte a fonte oficial.{% endif %}</p>
     {% endif %}
   </section>
+
+  {% if marca.contato %}
+  <aside class="contato" aria-label="Dúvidas sobre este ato">
+    <h2>Ficou com dúvida sobre este ato?</h2>
+    <p>Fale com {{ marca.nome }}: <a href="mailto:{{ marca.contato }}?subject={{ ('Dúvida: ' ~ (ato | titulo)) | urlencode }}">{{ marca.contato }}</a></p>
+  </aside>
+  {% endif %}
 </article>
 {% endblock %}

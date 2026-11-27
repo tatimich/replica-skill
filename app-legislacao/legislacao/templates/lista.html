@@ -19,6 +19,16 @@
         <option value="">Todos</option>
         {% for a in facetas.anos %}<option value="{{ a.valor }}" {{ 'selected' if f.ano == a.valor }}>{{ a.valor }} ({{ a.total }})</option>{% endfor %}
       </select>
+      <label for="mes">Mês</label>
+      <select id="mes" name="mes">
+        <option value="">Todos</option>
+        {% for nome in meses %}<option value="{{ loop.index }}" {{ 'selected' if f.mes == loop.index }}>{{ nome | capitalize }}</option>{% endfor %}
+      </select>
+      <label for="dia">Dia</label>
+      <select id="dia" name="dia">
+        <option value="">Todos</option>
+        {% for d in range(1, 32) %}<option value="{{ d }}" {{ 'selected' if f.dia == d }}>{{ d }}</option>{% endfor %}
+      </select>
       <label for="tipo">Tipo de ato</label>
       <select id="tipo" name="tipo">
         <option value="">Todos</option>
@@ -54,7 +64,7 @@
     <div class="resumo">
       <p><strong>{{ total }}</strong> {{ 'ato encontrado' if total == 1 else 'atos encontrados' }}
         {% if f.categoria %} em <strong>{{ f.categoria }}</strong>{% endif %}
-        {% if f.ano %} de <strong>{{ f.ano }}</strong>{% endif %}
+        {% if f.ano or f.mes or f.dia %} publicados em <strong>{{ f.dia ~ '/' if f.dia }}{{ '%02d' % f.mes ~ '/' if f.mes }}{{ f.ano or '' }}</strong>{% endif %}
       </p>
       <form action="{{ base }}/" method="get" class="ordem">
         {% for k, v in params.items() if k != 'ordem' and v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
@@ -68,7 +78,7 @@
       </form>
     </div>
 
-    {% if f.q or f.categoria or f.ano or f.tipo or f.orgao or f.situacao %}
+    {% if f.q or f.categoria or f.ano or f.mes or f.dia or f.tipo or f.orgao or f.situacao %}
     <p class="limpar"><a href="{{ url_lista(base, {'embed': params.get('embed', '')}) }}">Limpar busca e filtros</a></p>
     {% endif %}
 
@@ -86,11 +96,12 @@
           <span class="etiqueta">{{ a.tipo }}</span>
           {% if a.categoria %}<span class="etiqueta clara">{{ a.categoria }}</span>{% endif %}
           {% if a.situacao in ('revogado', 'alterado') %}<span class="etiqueta aviso">{{ SITUACOES[a.situacao] }}</span>{% endif %}
-          <time datetime="{{ a.data }}">{{ a.data | data_curta }}</time>
+          {% if a.data_publicacao %}<span>D.O.U. <time datetime="{{ a.data_publicacao }}">{{ a.data_publicacao | data_curta }}</time></span>
+          {% else %}<time datetime="{{ a.data }}">{{ a.data | data_curta }}</time>{% endif %}
         </div>
         <h3><a href="{{ base }}/atos/{{ a.id }}{{ '?' ~ e if e }}">{{ a | titulo }}</a></h3>
         {% if a.orgao %}<p class="orgao">{{ a.orgao }}</p>{% endif %}
-        <p class="ementa">{{ a.ementa }}</p>
+        <p class="ementa">{{ a.ementa | truncate(260) }}</p>
         {% if a.trecho and a.tem_texto %}<p class="trecho">{{ a.trecho | destacar }}</p>{% endif %}
         <p class="acoes">
           <a href="{{ base }}/atos/{{ a.id }}/pdf">Baixar PDF</a>

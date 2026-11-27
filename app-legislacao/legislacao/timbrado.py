@@ -75,6 +75,17 @@ def logo_aparado(caminho: Path) -> tuple[bytes, int, int]:
     return _LOGO_CACHE[chave]
 
 
+def _linha_orgao(ato: dict) -> str:
+    partes = [ato.get("orgao") or ""]
+    if ato.get("data_publicacao"):
+        partes.append(f"Publicado no D.O.U. em {db.data_curta(ato['data_publicacao'])}")
+    return " | ".join(p for p in partes if p)
+
+
+def _linha_relacoes(ato: dict) -> str:
+    return "  |  ".join(f"{r['rotulo']}: {r['titulo']}" for r in ato.get("relacoes", []))
+
+
 def _linha_fonte(ato: dict) -> str:
     partes = []
     if ato.get("fonte_url"):
@@ -180,7 +191,7 @@ def gerar_pdf(ato: dict, marca: Marca) -> bytes:
 
     historia = [
         Paragraph(escape(db.titulo(ato)).upper(), estilos["titulo"]),
-        Paragraph(escape(ato.get("orgao") or ""), estilos["orgao"]),
+        Paragraph(escape(_linha_orgao(ato)), estilos["orgao"]),
         Paragraph(escape(ato["ementa"]), estilos["ementa"]),
     ]
     corpo = paragrafos(ato.get("texto", ""))
@@ -193,7 +204,10 @@ def gerar_pdf(ato: dict, marca: Marca) -> bytes:
                 estilos["aviso"],
             )
         )
-    historia += [Spacer(1, 16), Paragraph(escape(_linha_fonte(ato)), estilos["aviso"])]
+    historia.append(Spacer(1, 16))
+    if _linha_relacoes(ato):
+        historia.append(Paragraph(escape(_linha_relacoes(ato)), estilos["aviso"]))
+    historia.append(Paragraph(escape(_linha_fonte(ato)), estilos["aviso"]))
     if marca.rodape:
         historia.append(Paragraph(escape(marca.rodape), estilos["aviso"]))
 
@@ -317,10 +331,10 @@ def gerar_docx(ato: dict, marca: Marca) -> bytes:
     t.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run = t.add_run(db.titulo(ato).upper())
     run.bold, run.font.size, run.font.color.rgb = True, Pt(12.5), cor
-    if ato.get("orgao"):
+    if _linha_orgao(ato):
         o = doc.add_paragraph()
         o.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = o.add_run(ato["orgao"])
+        run = o.add_run(_linha_orgao(ato))
         run.font.size, run.font.name = Pt(9), "Arial"
     e = doc.add_paragraph()
     e.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
@@ -341,6 +355,9 @@ def gerar_docx(ato: dict, marca: Marca) -> bytes:
         )
     f = doc.add_paragraph()
     f.paragraph_format.space_before = Pt(16)
+    if _linha_relacoes(ato):
+        run = f.add_run(_linha_relacoes(ato) + "\n")
+        run.font.size, run.font.name = Pt(9), "Arial"
     run = f.add_run(_linha_fonte(ato))
     run.font.size, run.font.name = Pt(9), "Arial"
     if marca.rodape:

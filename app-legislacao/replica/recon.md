@@ -2,11 +2,29 @@
 
 Referência indicada: `https://abmes.org.br/legislacoes?categoria=21&ano=`
 
-**Limitação:** a página não pôde ser lida neste ambiente (o host está bloqueado na rede da sessão).
-Este mapa descreve apenas o que se deduz da própria URL (filtros por `categoria` e `ano`)
-e o padrão comum de bibliotecas de atos normativos. Nada do conteúdo, da curadoria, dos textos
-ou do visual da ABMES foi copiado. Quando o acesso estiver liberado, revisar este mapa com
-`/replica-recon` lendo a página como usuária.
+Lida em 27/11/2026 (lista e uma página de detalhe, leitura manual, sem robô). Registro apenas
+de funcionalidades; nada do conteúdo, da curadoria, dos textos ou do visual foi copiado.
+
+## O que a referência oferece (funcional)
+- Busca por termo, com frase exata entre aspas.
+- Filtros: categoria (na prática, o **tipo** do ato: Lei, Decreto, Resolução, Portaria do MEC…),
+  subcategoria (o **órgão** emissor), ano, mês e dia; cada opção com contagem.
+- Cartão do resultado: tipo, título curto (tipo + sigla do órgão + número), data do D.O.U., ementa resumida,
+  botão de baixar o arquivo.
+- Mais resultados por "carregar mais" (lotes de 9).
+- Detalhe: tipo, título, data do ato, data do D.O.U., órgão, baixar arquivo, ementa,
+  atos relacionados (ex.: "Revoga:") e um chamado para tirar dúvidas com a equipe jurídica.
+
+## Equivalência no clone
+| referência | clone |
+| --- | --- |
+| categoria (tipo) | filtro "Tipo de ato" |
+| subcategoria (órgão) | filtro "Órgão" |
+| ano, mês, dia | filtros ano, mês e dia (pela data do D.O.U.) |
+| "carregar mais" | paginação (melhor para links e para embutir) |
+| relacionados ("Revoga") | Revoga / Altera, com o sentido inverso automático |
+| contato da consultoria | caixa "Ficou com dúvida?" com o e-mail da marca |
+| (não tem) | categorias por tema, situação (vigente/alterado/revogado), texto integral pesquisável, PDF e Word no timbrado |
 
 ## Fluxo central
 1. A pessoa abre a lista de atos (mais recentes primeiro).

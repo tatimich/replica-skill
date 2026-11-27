@@ -8,7 +8,8 @@
   <div class="linha">
     <label>Tipo *<input name="tipo" required value="{{ ato.tipo or '' }}" placeholder="Lei, Decreto, Portaria, Resolução…"></label>
     <label>Número<input name="numero" value="{{ ato.numero or '' }}" placeholder="ex.: 1.234"></label>
-    <label>Data *<input name="data" type="date" required value="{{ ato.data or '' }}"></label>
+    <label>Data do ato *<input name="data" type="date" required value="{{ ato.data or '' }}"></label>
+    <label>Publicação no D.O.U.<input name="data_publicacao" type="date" value="{{ ato.data_publicacao or '' }}"></label>
   </div>
   <div class="linha">
     <label>Órgão<input name="orgao" value="{{ ato.orgao or '' }}" placeholder="Órgão que publicou"></label>
@@ -19,6 +20,10 @@
   </div>
   <label>Link da fonte oficial<input name="fonte_url" type="url" value="{{ ato.fonte_url or '' }}" placeholder="https://"></label>
   <label>Ementa *<textarea name="ementa" rows="3" required>{{ ato.ementa or '' }}</textarea></label>
+  <div class="linha">
+    <label>Revoga (um ato por linha)<textarea name="revoga" rows="3" placeholder="Portaria nº 23/2017">{{ ato.revoga or '' }}</textarea></label>
+    <label>Altera (um ato por linha)<textarea name="altera" rows="3" placeholder="Decreto nº 9.235, de 15 de dezembro de 2017">{{ ato.altera or '' }}</textarea></label>
+  </div>
   <label>Texto integral<textarea name="texto" rows="16">{{ ato.texto or '' }}</textarea></label>
   <p><button type="submit">Salvar</button></p>
 </form>

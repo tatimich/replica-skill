@@ -134,3 +134,11 @@ mark { background: var(--realce); color: inherit; padding: 0 2px; }
 .tabela { width: 100%; border-collapse: collapse; font-size: .9375rem; }
 .tabela th, .tabela td { text-align: left; padding: 8px; border-bottom: 1px solid var(--borda); }
 @media (max-width: 600px) { .tabela th:nth-child(3), .tabela td:nth-child(3) { display: none; } }
+
+/* Relações e contato */
+.relacoes { margin: 0 0 24px; }
+.relacoes h2, .contato h2 { font-size: 1rem; margin: 0 0 8px; }
+.relacoes ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rel-rotulo { display: inline-block; min-width: 110px; font-size: .8125rem; font-weight: 600; color: var(--texto-suave); text-transform: uppercase; letter-spacing: .03em; }
+.contato { margin-top: 32px; border-top: 3px solid var(--cor-destaque, #C79A50); background: var(--superficie); padding: var(--espaco); border-radius: 0 0 var(--raio) var(--raio); }
+.contato p { margin: 0; }

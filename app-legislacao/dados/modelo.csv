@@ -1,1 +1,1 @@
-tipo,numero,data,orgao,categoria,ementa,situacao,fonte_url,texto
+tipo,numero,data,data_publicacao,orgao,categoria,ementa,situacao,fonte_url,revoga,altera,texto

@@ -1,8 +1,8 @@
-tipo,numero,data,orgao,categoria,ementa,situacao,fonte_url,texto
-Portaria de Exemplo,1,2024-03-15,Órgão Fictício de Exemplo,Regulação,"EXEMPLO FICTÍCIO para testar o sistema. Dispõe sobre procedimentos de regulação de cursos de graduação.",vigente,,"Art. 1º Este é um texto fictício de demonstração, sem valor normativo.
+tipo,numero,data,data_publicacao,orgao,categoria,ementa,situacao,fonte_url,revoga,altera,texto
+Portaria de Exemplo,1,2024-03-15,2024-03-18,Órgão Fictício de Exemplo,Regulação,"EXEMPLO FICTÍCIO para testar o sistema. Dispõe sobre procedimentos de regulação de cursos de graduação.",vigente,,Decreto de Exemplo nº 3/2022,Resolução de Exemplo nº 2/2023,"Art. 1º Este é um texto fictício de demonstração, sem valor normativo.
 Art. 2º A regulação dos cursos observará os prazos definidos em calendário próprio.
 Art. 3º Esta portaria de exemplo entra em vigor na data de sua publicação."
-Resolução de Exemplo,2,2023-08-01,Conselho Fictício de Exemplo,Avaliação,"EXEMPLO FICTÍCIO para testar o sistema. Estabelece critérios de avaliação institucional.",alterado,,"Art. 1º Texto fictício de demonstração sobre avaliação institucional e indicadores de qualidade.
+Resolução de Exemplo,2,2023-08-01,2023-08-02,Conselho Fictício de Exemplo,Avaliação,"EXEMPLO FICTÍCIO para testar o sistema. Estabelece critérios de avaliação institucional.",alterado,,,,"Art. 1º Texto fictício de demonstração sobre avaliação institucional e indicadores de qualidade.
 Art. 2º Revoga-se a disposição de exemplo anterior."
-Decreto de Exemplo,3,2022-11-10,Órgão Fictício de Exemplo,Educação a Distância,"EXEMPLO FICTÍCIO para testar o sistema. Regulamenta a oferta de cursos a distância.",revogado,,
-Instrução Normativa de Exemplo,4,2024-06-20,Órgão Fictício de Exemplo,Financiamento Estudantil,"EXEMPLO FICTÍCIO para testar o sistema. Orienta sobre contratos de financiamento estudantil.",vigente,,"Art. 1º Texto fictício de demonstração sobre financiamento estudantil e aditamentos."
+Decreto de Exemplo,3,2022-11-10,2022-11-11,Órgão Fictício de Exemplo,Educação a Distância,"EXEMPLO FICTÍCIO para testar o sistema. Regulamenta a oferta de cursos a distância.",revogado,,,,
+Instrução Normativa de Exemplo,4,2024-06-20,2024-06-21,Órgão Fictício de Exemplo,Financiamento Estudantil,"EXEMPLO FICTÍCIO para testar o sistema. Orienta sobre contratos de financiamento estudantil.",vigente,,,,"Art. 1º Texto fictício de demonstração sobre financiamento estudantil e aditamentos."

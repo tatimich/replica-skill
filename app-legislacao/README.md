@@ -30,8 +30,13 @@ sem a variável, a administração fica desligada).
 - Pela web: `/admin/novo` ou `/admin/importar` (CSV).
 - Pela linha de comando: `python -m legislacao.importar meu-arquivo.csv`
 
-Colunas do CSV (modelo em `dados/modelo.csv`): `tipo, numero, data, orgao, categoria, ementa, situacao, fonte_url, texto`.
+Colunas do CSV (modelo em `dados/modelo.csv`):
+`tipo, numero, data, data_publicacao, orgao, categoria, ementa, situacao, fonte_url, revoga, altera, texto`.
 Obrigatórias: `tipo`, `data` (AAAA-MM-DD ou DD/MM/AAAA) e `ementa`. `situacao`: `vigente`, `alterado`, `revogado` ou `sem_informacao`.
+`data_publicacao` é a data no D.O.U.; quando existe, os filtros de ano, mês e dia usam essa data.
+`revoga` e `altera`: atos citados, separados por ponto e vírgula, no formato `Portaria nº 23/2017` ou
+`Decreto nº 9.235, de 15 de dezembro de 2017`. Se o ato citado estiver cadastrado (ou for cadastrado depois),
+vira link nos dois sentidos ("Revoga" / "Revogado por"); senão, aparece como texto.
 Reimportar o mesmo ato (mesmo tipo, número, órgão e data) atualiza o cadastro.
 
 ## Aplicar a marca (timbrado)

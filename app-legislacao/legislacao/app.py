@@ -91,13 +91,18 @@ def url_lista(base: str, params: dict, **mudancas) -> str:
 
 
 def ler_filtros(
-    q: str = "", categoria: str = "", ano: str = "", tipo: str = "", orgao: str = "",
+    q: str = "", categoria: str = "", ano: str = "", mes: str = "", dia: str = "", tipo: str = "", orgao: str = "",
     situacao: str = "", ordem: str = "", pagina: int = Query(1, ge=1), por_pagina: int = Query(20, ge=1, le=100),
 ) -> db.Filtros:
     ano_int = int(ano) if re.fullmatch(r"\d{4}", ano or "") else None
+    mes_int = int(mes) if re.fullmatch(r"\d{1,2}", mes or "") and 1 <= int(mes) <= 12 else None
+    dia_int = int(dia) if re.fullmatch(r"\d{1,2}", dia or "") and 1 <= int(dia) <= 31 else None
     if ordem not in ("", "recentes", "antigos", "relevancia"):
         ordem = ""
-    return db.Filtros(q.strip()[:200], categoria, ano_int, tipo, orgao, situacao, ordem, pagina, por_pagina)
+    return db.Filtros(
+        q=q.strip()[:200], categoria=categoria, ano=ano_int, mes=mes_int, dia=dia_int, tipo=tipo,
+        orgao=orgao, situacao=situacao, ordem=ordem, pagina=pagina, por_pagina=por_pagina,
+    )
 
 
 # ------------------------------------------------------------------- páginas públicas
@@ -127,20 +132,23 @@ def lista(request: Request, f: db.Filtros = Depends(ler_filtros)):
         atos, total = db.buscar(con, f)
         fac = db.facetas(con)
     params = {
-        "q": f.q, "categoria": f.categoria, "ano": f.ano or "", "tipo": f.tipo, "orgao": f.orgao,
+        "q": f.q, "categoria": f.categoria, "ano": f.ano or "", "mes": f.mes or "", "dia": f.dia or "",
+        "tipo": f.tipo, "orgao": f.orgao,
         "situacao": f.situacao, "ordem": f.ordem,
     }
     if request.query_params.get("embed") == "1":
         params["embed"] = "1"
     paginas = max(1, math.ceil(total / f.por_pagina))
     ctx = contexto(request, f=f, atos=atos, total=total, facetas=fac, params=params,
-                   paginas=paginas, url_lista=url_lista)
+                   paginas=paginas, url_lista=url_lista, meses=db.MESES)
     return templates.TemplateResponse(request, "lista.html", ctx)
 
 
 def _ato_ou_404(ato_id: int) -> dict:
     with conexao() as con:
         ato = db.obter(con, ato_id)
+        if ato:
+            ato["relacoes"] = db.relacoes(con, ato_id)
     if not ato:
         raise HTTPException(404, "Ato não encontrado")
     return ato
@@ -178,7 +186,7 @@ def baixar_docx(ato_id: int):
 
 
 def _publico(request: Request, ato: dict) -> dict:
-    campos = ("id", "tipo", "numero", "data", "orgao", "categoria", "ementa", "situacao", "fonte_url")
+    campos = ("id", "tipo", "numero", "data", "data_publicacao", "orgao", "categoria", "ementa", "situacao", "fonte_url")
     item = {k: ato[k] for k in campos}
     item["titulo"] = db.titulo(ato)
     origem = str(request.base_url).rstrip("/")  # já inclui o root_path
@@ -207,6 +215,10 @@ def api_ato(request: Request, ato_id: int):
     ato = _ato_ou_404(ato_id)
     item = _publico(request, ato)
     item["texto"] = ato["texto"]
+    origem = str(request.base_url).rstrip("/")
+    item["relacoes"] = [
+        {**r, "pagina": f"{origem}/atos/{r['id']}" if r["id"] else None} for r in ato["relacoes"]
+    ]
     return item
 
 
@@ -254,7 +266,10 @@ def admin_novo(request: Request):
 
 @app.get("/admin/atos/{ato_id}", response_class=HTMLResponse, dependencies=[Depends(admin)])
 def admin_editar(request: Request, ato_id: int):
-    return templates.TemplateResponse(request, "admin_form.html", contexto(request, ato=_ato_ou_404(ato_id), erro=""))
+    ato = _ato_ou_404(ato_id)
+    with conexao() as con:
+        ato.update(db.referencias_texto(con, ato_id))
+    return templates.TemplateResponse(request, "admin_form.html", contexto(request, ato=ato, erro=""))
 
 
 async def _form(request: Request) -> dict:
