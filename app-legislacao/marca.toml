@@ -1,20 +1,22 @@
 # Identidade da marca: aparece no site e no timbrado dos arquivos baixados (PDF e Word).
-# Projeto neutro por enquanto. Para aplicar a marca, troque os valores abaixo
-# e coloque o logo em marca/ (PNG ou JPG, fundo transparente de preferência).
+# Dados e logo iguais aos do Monitor da Educação (repositório Monitor-da-Educacao_DOU_EM-Advocacia):
+# config/monitor_dou.json (institution, branding) e assets/logo_esmeraldo_malheiros_timbrado.png.
 
 [marca]
-nome = "Biblioteca de Legislação"
-subtitulo = "Educação Superior"
-logo = ""                     # ex.: "marca/logo.png"
-endereco = ""                 # ex.: "Rua Exemplo, 100, Cidade/UF"
-contato = ""                  # ex.: "contato@exemplo.com.br  |  (00) 0000-0000"
-site = ""                     # ex.: "www.exemplo.com.br"
-cor_primaria = "#1F3A5F"
+nome = "Esmeraldo Malheiros Advocacia"
+subtitulo = "Biblioteca de Legislação"
+logo = "marca/logo_esmeraldo_malheiros_timbrado.png"
+logo_largura_mm = 58          # largura visual do logo no timbrado (igual ao Monitor)
+logo_margem_topo_mm = 6       # margem superior do logo (igual ao Monitor)
+endereco = ""
+contato = "contato@esmeraldomalheiros.com.br"
+site = "www.esmeraldomalheiros.com.br"
+cor_primaria = "#07384a"      # azul da marca
+cor_secundaria = "#c79a50"    # dourado da marca
 rodape = "Texto reproduzido para consulta. Confira sempre a publicação oficial."
 
 [integracao]
-# Sites autorizados a chamar a API JSON (CORS). Ex.: ["https://www.suamarca.com.br"]
-cors_origens = []
+# Sites autorizados a chamar a API JSON (CORS).
+cors_origens = ["https://www.esmeraldomalheiros.com.br", "https://esmeraldomalheiros.com.br"]
 # Sites autorizados a exibir a busca dentro de um iframe.
-# Ex.: ["'self'", "https://www.suamarca.com.br"]
-frame_ancestors = ["'self'"]
+frame_ancestors = ["'self'", "https://www.esmeraldomalheiros.com.br", "https://esmeraldomalheiros.com.br"]

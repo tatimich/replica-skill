@@ -82,9 +82,21 @@ def test_download_docx_timbrado(cliente):
     assert r.status_code == 200
     with zipfile.ZipFile(io.BytesIO(r.content)) as z:
         cabecalhos = "".join(z.read(n).decode() for n in z.namelist() if n.startswith("word/header"))
+        rodapes = "".join(z.read(n).decode() for n in z.namelist() if n.startswith("word/footer"))
         corpo = z.read("word/document.xml").decode()
-    assert carregar().nome in cabecalhos
+        imagens = [n for n in z.namelist() if n.startswith("word/media/")]
+    marca = carregar()
+    if marca.caminho_logo:
+        assert "<pic:pic" in cabecalhos and imagens  # logo no timbrado
+    else:
+        assert marca.nome in cabecalhos
+    assert marca.site in rodapes and "PAGE" in rodapes
     assert "A regulação dos cursos superiores" in corpo
+
+
+def test_logo_da_marca(cliente):
+    r = cliente.get("/marca/logo.png")
+    assert r.status_code == 200 and r.content.startswith(b"\x89PNG")
 
 
 def test_embed_e_cabecalhos(cliente):

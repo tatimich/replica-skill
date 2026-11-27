@@ -20,6 +20,9 @@ class Marca:
     contato: str = ""
     site: str = ""
     cor_primaria: str = "#1F3A5F"
+    cor_secundaria: str = "#C79A50"
+    logo_largura_mm: float = 58.0
+    logo_margem_topo_mm: float = 6.0
     rodape: str = ""
     cors_origens: list[str] = field(default_factory=list)
     frame_ancestors: list[str] = field(default_factory=lambda: ["'self'"])
@@ -35,7 +38,8 @@ class Marca:
 
     @property
     def linha_contato(self) -> str:
-        return "  |  ".join(x for x in (self.endereco, self.contato, self.site) if x)
+        """Linha do rodapé, na ordem do Monitor: site | e-mail (| endereço)."""
+        return " | ".join(x for x in (self.site, self.contato, self.endereco) if x)
 
 
 def carregar(caminho: Path | str | None = None) -> Marca:
@@ -55,6 +59,9 @@ def carregar(caminho: Path | str | None = None) -> Marca:
         contato=m.get("contato", ""),
         site=m.get("site", ""),
         cor_primaria=m.get("cor_primaria", padrao.cor_primaria),
+        cor_secundaria=m.get("cor_secundaria", padrao.cor_secundaria),
+        logo_largura_mm=float(m.get("logo_largura_mm", padrao.logo_largura_mm)),
+        logo_margem_topo_mm=float(m.get("logo_margem_topo_mm", padrao.logo_margem_topo_mm)),
         rodape=m.get("rodape", ""),
         cors_origens=list(i.get("cors_origens", [])),
         frame_ancestors=list(i.get("frame_ancestors", padrao.frame_ancestors)),

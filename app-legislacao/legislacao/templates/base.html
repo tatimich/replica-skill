@@ -4,10 +4,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block titulo %}{{ marca.nome }}{% endblock %}</title>
+  <title>{% block titulo %}{{ marca.subtitulo or marca.nome }}{% endblock %}</title>
   <meta name="description" content="{% block descricao %}Busca de leis, decretos, portarias e demais atos normativos.{% endblock %}">
-  <link rel="stylesheet" href="{{ base }}/marca.css">
   <link rel="stylesheet" href="{{ base }}/static/style.css">
+  <link rel="stylesheet" href="{{ base }}/marca.css">
   {% if embed %}<script src="{{ base }}/static/altura.js" defer></script>{% endif %}
 </head>
 <body class="{{ 'embutido' if embed else '' }}">
@@ -16,9 +16,13 @@
   <header class="topo">
     <div class="topo-interno">
       <a class="marca" href="{{ base }}/">
+        {% if marca.caminho_logo %}
+        <img class="marca-logo" src="{{ base }}/marca/logo.png" alt="{{ marca.nome }}" width="232" height="81">
+        {% else %}
         <span class="marca-nome">{{ marca.nome }}</span>
-        {% if marca.subtitulo %}<span class="marca-sub">{{ marca.subtitulo }}</span>{% endif %}
+        {% endif %}
       </a>
+      {% if marca.subtitulo %}<span class="marca-sub">{{ marca.subtitulo }}</span>{% endif %}
     </div>
   </header>
   {% endif %}
@@ -27,8 +31,8 @@
   </main>
   {% if not embed %}
   <footer class="rodape">
-    <p>{{ marca.rodape }}</p>
     {% if marca.linha_contato %}<p>{{ marca.linha_contato }}</p>{% endif %}
+    <p class="rodape-aviso">{{ marca.rodape }}</p>
   </footer>
   {% endif %}
 </body>

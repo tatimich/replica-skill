@@ -9,6 +9,7 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 from docx import Document
+from docx.enum.table import WD_ALIGN_VERTICAL
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -17,7 +18,8 @@ from reportlab.lib.colors import HexColor
 from reportlab.lib.enums import TA_JUSTIFY
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.units import cm
+from reportlab.lib.units import cm, mm
+from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
@@ -44,6 +46,33 @@ def _cor(hexa: str) -> tuple[int, int, int]:
     if not re.fullmatch(r"[0-9a-fA-F]{6}", h):
         h = "1F3A5F"
     return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))
+
+
+_LOGO_CACHE: dict[str, tuple[bytes, int, int]] = {}
+
+
+def logo_aparado(caminho: Path) -> tuple[bytes, int, int]:
+    """Remove margens transparentes ou brancas do logo (mesma regra do Monitor).
+
+    Devolve (PNG em bytes, largura, altura) para manter a largura visual exata.
+    """
+    chave = f"{caminho}:{caminho.stat().st_mtime}"
+    if chave not in _LOGO_CACHE:
+        from PIL import Image, ImageChops
+
+        with Image.open(caminho) as fonte:
+            img = fonte.convert("RGBA")
+        caixa = img.getchannel("A").getbbox()
+        if caixa:
+            img = img.crop(caixa)
+        fundo = Image.new("RGBA", img.size, (255, 255, 255, 255))
+        caixa = ImageChops.difference(img.convert("RGB"), fundo.convert("RGB")).getbbox()
+        if caixa:
+            img = img.crop(caixa)
+        saida = io.BytesIO()
+        img.save(saida, format="PNG", optimize=True)
+        _LOGO_CACHE[chave] = (saida.getvalue(), img.width, img.height)
+    return _LOGO_CACHE[chave]
 
 
 def _linha_fonte(ato: dict) -> str:
@@ -88,41 +117,42 @@ def gerar_pdf(ato: dict, marca: Marca) -> bytes:
     fontes = _fontes_pdf()
     cor = HexColor(marca.cor_primaria if re.fullmatch(r"#[0-9a-fA-F]{6}", marca.cor_primaria) else "#1F3A5F")
     largura, altura = A4
-    margem = 2.2 * cm
+    margem = 18 * mm
     logo = marca.caminho_logo
+    logo_img, logo_w, logo_h = None, 0.0, 0.0
+    if logo:
+        dados_logo, px_w, px_h = logo_aparado(logo)
+        logo_img = ImageReader(io.BytesIO(dados_logo))
+        logo_w = marca.logo_largura_mm * mm
+        logo_h = logo_w * px_h / px_w
+    topo_texto = max(32 * mm, marca.logo_margem_topo_mm * mm + logo_h + 8 * mm)
 
     def timbre(canvas, doc):
         canvas.saveState()
-        # Cabeçalho
-        topo = altura - 1.2 * cm
-        x_texto = margem
-        if logo:
-            alt_logo = 1.6 * cm
-            canvas.drawImage(
-                str(logo), margem, topo - alt_logo, height=alt_logo, width=4 * cm,
-                preserveAspectRatio=True, anchor="w", mask="auto",
-            )
-            x_texto = margem + 4.4 * cm
-        canvas.setFillColor(cor)
-        canvas.setFont(fontes["Titulo"], 13)
-        canvas.drawString(x_texto, topo - 0.65 * cm, marca.nome)
-        if marca.subtitulo:
-            canvas.setFont(fontes["Apoio"], 9)
-            canvas.drawString(x_texto, topo - 1.15 * cm, marca.subtitulo)
+        # Cabeçalho: logo à direita e linha fina da borda esquerda até o logo.
         canvas.setStrokeColor(cor)
-        canvas.setLineWidth(1.2)
-        canvas.line(margem, topo - 1.85 * cm, largura - margem, topo - 1.85 * cm)
-        # Rodapé
+        if logo_img:
+            logo_x = largura - margem - logo_w
+            logo_y = altura - marca.logo_margem_topo_mm * mm - logo_h
+            canvas.drawImage(logo_img, logo_x, logo_y, width=logo_w, height=logo_h,
+                             preserveAspectRatio=True, mask="auto")
+            canvas.setLineWidth(0.6)
+            canvas.line(0, altura - 18.5 * mm, logo_x - 8 * mm, altura - 18.5 * mm)
+        else:
+            canvas.setFillColor(cor)
+            canvas.setFont(fontes["Titulo"], 13)
+            canvas.drawString(margem, altura - 14 * mm, marca.nome)
+            canvas.setLineWidth(0.6)
+            canvas.line(0, altura - 18.5 * mm, largura, altura - 18.5 * mm)
+        # Rodapé: linha, "site | e-mail | Página N" e faixa na cor da marca.
         canvas.setLineWidth(0.5)
-        canvas.line(margem, 2.0 * cm, largura - margem, 2.0 * cm)
-        canvas.setFillColor(HexColor("#444444"))
-        canvas.setFont(fontes["Apoio"], 7.5)
-        y = 1.6 * cm
-        for linha in (marca.linha_contato, marca.rodape):
-            if linha:
-                canvas.drawString(margem, y, linha[:140])
-                y -= 0.38 * cm
-        canvas.drawRightString(largura - margem, 1.6 * cm, f"Página {doc.page}")
+        canvas.line(margem, 14 * mm, largura - margem, 14 * mm)
+        canvas.setFillColor(HexColor("#000000"))
+        canvas.setFont("Helvetica", 8)
+        partes = [x for x in (marca.linha_contato, f"Página {doc.page}") if x]
+        canvas.drawCentredString(largura / 2, 9 * mm, " | ".join(partes))
+        canvas.setFillColor(cor)
+        canvas.rect(0, 0, largura, 7 * mm, stroke=0, fill=1)
         canvas.restoreState()
 
     estilos = {
@@ -164,11 +194,13 @@ def gerar_pdf(ato: dict, marca: Marca) -> bytes:
             )
         )
     historia += [Spacer(1, 16), Paragraph(escape(_linha_fonte(ato)), estilos["aviso"])]
+    if marca.rodape:
+        historia.append(Paragraph(escape(marca.rodape), estilos["aviso"]))
 
     saida = io.BytesIO()
     doc = SimpleDocTemplate(
         saida, pagesize=A4, leftMargin=margem, rightMargin=margem,
-        topMargin=3.6 * cm, bottomMargin=2.6 * cm,
+        topMargin=topo_texto, bottomMargin=22 * mm,
         title=db.titulo(ato), author=marca.nome, subject=ato["ementa"][:200],
     )
     doc.build(historia, onFirstPage=timbre, onLaterPages=timbre)
@@ -188,6 +220,27 @@ def _borda_inferior(paragrafo, cor_hex: str, espessura: int = 8) -> None:
     linha.set(qn("w:color"), cor_hex.lstrip("#"))
     bordas.append(linha)
     pPr.append(bordas)
+
+
+def _borda_superior(paragrafo, cor_hex: str, espessura: int = 4) -> None:
+    pPr = paragrafo._p.get_or_add_pPr()
+    bordas = OxmlElement("w:pBdr")
+    linha = OxmlElement("w:top")
+    linha.set(qn("w:val"), "single")
+    linha.set(qn("w:sz"), str(espessura))
+    linha.set(qn("w:space"), "4")
+    linha.set(qn("w:color"), cor_hex.lstrip("#"))
+    bordas.append(linha)
+    pPr.append(bordas)
+
+
+def _sombreamento(paragrafo, cor_hex: str) -> None:
+    pPr = paragrafo._p.get_or_add_pPr()
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:color"), "auto")
+    shd.set(qn("w:fill"), cor_hex.lstrip("#"))
+    pPr.append(shd)
 
 
 def _campo(paragrafo, instrucao: str) -> None:
@@ -214,41 +267,50 @@ def gerar_docx(ato: dict, marca: Marca) -> bytes:
     secao = doc.sections[0]
     secao.page_height, secao.page_width = Cm(29.7), Cm(21.0)
     secao.left_margin = secao.right_margin = Cm(2.2)
-    secao.top_margin, secao.bottom_margin = Cm(3.2), Cm(2.4)
-    secao.header_distance, secao.footer_distance = Cm(1.0), Cm(1.0)
+    secao.top_margin, secao.bottom_margin = Cm(3.6), Cm(2.4)
+    secao.header_distance, secao.footer_distance = Cm(marca.logo_margem_topo_mm / 10), Cm(0.6)
 
     normal = doc.styles["Normal"]
     normal.font.name = "Times New Roman"
     normal.font.size = Pt(11)
 
-    # Cabeçalho (timbre)
-    cab = secao.header.paragraphs[0]
+    # Cabeçalho: linha fina à esquerda e logo à direita (como no PDF).
+    largura_util = secao.page_width - secao.left_margin - secao.right_margin
     logo = marca.caminho_logo
+    cab = secao.header
     if logo:
-        cab.add_run().add_picture(str(logo), height=Cm(1.4))
-        cab.add_run("   ")
-    nome = cab.add_run(marca.nome)
-    nome.bold, nome.font.size, nome.font.color.rgb, nome.font.name = True, Pt(13), cor, "Arial"
-    if marca.subtitulo:
-        cab.add_run("\n")
-        sub = cab.add_run(marca.subtitulo)
-        sub.font.size, sub.font.color.rgb, sub.font.name = Pt(9), cor, "Arial"
-    _borda_inferior(cab, marca.cor_primaria, 10)
+        dados_logo, _, _ = logo_aparado(logo)
+        tabela = cab.add_table(rows=1, cols=2, width=largura_util)
+        tabela.autofit = False
+        larg_logo = Cm(marca.logo_largura_mm / 10)
+        esq, dir_ = tabela.rows[0].cells
+        esq.width, dir_.width = largura_util - larg_logo, larg_logo
+        esq.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+        _borda_inferior(esq.paragraphs[0], marca.cor_primaria, 5)
+        p_logo = dir_.paragraphs[0]
+        p_logo.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        p_logo.add_run().add_picture(io.BytesIO(dados_logo), width=larg_logo)
+        cab.paragraphs[0].paragraph_format.space_after = Pt(0)
+    else:
+        p = cab.paragraphs[0]
+        run = p.add_run(marca.nome)
+        run.bold, run.font.size, run.font.color.rgb, run.font.name = True, Pt(13), cor, "Arial"
+        _borda_inferior(p, marca.cor_primaria, 5)
 
-    # Rodapé
+    # Rodapé: linha, "site | e-mail | Página N" e faixa na cor da marca.
     rod = secao.footer.paragraphs[0]
-    _borda_inferior(rod, marca.cor_primaria, 4)  # linha acima do texto do rodapé
-    rod.paragraph_format.space_after = Pt(2)
-    for linha in (marca.linha_contato, marca.rodape):
-        if linha:
-            p = secao.footer.add_paragraph()
-            run = p.add_run(linha)
-            run.font.size, run.font.name = Pt(7.5), "Arial"
-    p = secao.footer.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run = p.add_run("Página ")
-    run.font.size = Pt(7.5)
-    _campo(p, "PAGE")
+    rod.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _borda_superior(rod, marca.cor_primaria, 4)
+    if marca.linha_contato:
+        run = rod.add_run(marca.linha_contato + " | ")
+        run.font.size, run.font.name = Pt(8), "Arial"
+    run = rod.add_run("Página ")
+    run.font.size, run.font.name = Pt(8), "Arial"
+    _campo(rod, "PAGE")
+    faixa = secao.footer.add_paragraph()
+    faixa.paragraph_format.space_before = Pt(6)
+    _sombreamento(faixa, marca.cor_primaria)
+    faixa.add_run(" ").font.size = Pt(9)
 
     # Corpo
     t = doc.add_paragraph()
@@ -281,6 +343,9 @@ def gerar_docx(ato: dict, marca: Marca) -> bytes:
     f.paragraph_format.space_before = Pt(16)
     run = f.add_run(_linha_fonte(ato))
     run.font.size, run.font.name = Pt(9), "Arial"
+    if marca.rodape:
+        run = doc.add_paragraph().add_run(marca.rodape)
+        run.font.size, run.font.name = Pt(9), "Arial"
 
     doc.core_properties.title = db.titulo(ato)
     doc.core_properties.author = marca.nome

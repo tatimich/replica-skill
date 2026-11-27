@@ -4,7 +4,9 @@ Sistema de busca de atos normativos (leis, decretos, portarias, resoluções…)
 categoria e ano, busca no texto, página de cada ato e download em **PDF** e **Word no timbrado da marca**.
 Feito para ser integrado ao site da marca.
 
-Projeto neutro, sem marca por enquanto. Os atos em `dados/exemplo.csv` são **fictícios**, só para testar.
+Marca aplicada: **Esmeraldo Malheiros Advocacia**, com o mesmo logo, cores e rodapé do Monitor da Educação
+(repositório `Monitor-da-Educacao_DOU_EM-Advocacia`: `config/monitor_dou.json` e `assets/logo_esmeraldo_malheiros_timbrado.png`).
+Os atos em `dados/exemplo.csv` são **fictícios**, só para testar.
 
 ## Rodar
 
@@ -34,8 +36,12 @@ Reimportar o mesmo ato (mesmo tipo, número, órgão e data) atualiza o cadastro
 
 ## Aplicar a marca (timbrado)
 
-Edite `marca.toml`: nome, subtítulo, `logo` (ex.: `marca/logo.png`), endereço, contato, site, cor e rodapé.
+Edite `marca.toml`: nome, subtítulo, `logo`, largura e margem do logo, contato, site, cores e aviso.
 Isso muda o cabeçalho do site e o timbrado dos PDFs e arquivos Word baixados. Reinicie o servidor depois de editar.
+
+O timbrado segue o desenho do Monitor: logo no canto superior direito (58 mm de largura, 6 mm do topo,
+margens transparentes ou brancas removidas automaticamente), linha fina azul no cabeçalho, rodapé com
+`site | e-mail | Página N` e faixa azul na base da página.
 
 ## Integrar ao site da marca
 

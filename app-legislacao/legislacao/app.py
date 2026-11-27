@@ -107,8 +107,18 @@ def ler_filtros(
 def marca_css():
     """Cores da marca como variáveis CSS (vêm do marca.toml)."""
     cor = marca.cor_primaria if re.fullmatch(r"#[0-9a-fA-F]{6}", marca.cor_primaria) else "#1F3A5F"
-    css = f":root {{ --cor-marca: {cor}; }}\n"
+    sec = marca.cor_secundaria if re.fullmatch(r"#[0-9a-fA-F]{6}", marca.cor_secundaria) else "#C79A50"
+    css = f":root {{ --cor-marca: {cor}; --cor-destaque: {sec}; }}\n"
     return Response(css, media_type="text/css", headers={"Cache-Control": "max-age=300"})
+
+
+@app.get("/marca/logo.png")
+def marca_logo():
+    """Logo da marca (com margens aparadas), usado no cabeçalho do site."""
+    if not marca.caminho_logo:
+        raise HTTPException(404)
+    dados, _, _ = timbrado.logo_aparado(marca.caminho_logo)
+    return Response(dados, media_type="image/png", headers={"Cache-Control": "max-age=3600"})
 
 
 @app.get("/", response_class=HTMLResponse)
