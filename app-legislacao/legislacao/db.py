@@ -43,6 +43,7 @@ create table if not exists atos (
     situacao text not null default 'sem_informacao'
         check (situacao in ('vigente', 'alterado', 'revogado', 'sem_informacao')),
     fonte_url text not null default '',
+    origem_id text,
     criado_em text not null default (datetime('now')),
     atualizado_em text not null default (datetime('now'))
 );
@@ -56,7 +57,18 @@ create table if not exists relacoes (
 create index if not exists relacoes_origem on relacoes (origem_id);
 create index if not exists relacoes_destino on relacoes (destino_id);
 
-create unique index if not exists atos_identidade on atos (tipo, numero, orgao, data);
+create unique index if not exists atos_identidade on atos (tipo, numero, orgao, data) where numero != '';
+create unique index if not exists atos_origem on atos (origem_id) where origem_id is not null;
+
+create table if not exists coletas (
+    data text not null,
+    secao text not null,
+    total integer not null default 0,
+    incluidos integer not null default 0,
+    erro text not null default '',
+    em text not null default (datetime('now')),
+    primary key (data, secao)
+);
 create index if not exists atos_data on atos (data desc);
 create index if not exists atos_ano on atos (ano);
 create index if not exists atos_categoria on atos (categoria);
@@ -103,9 +115,17 @@ def conectar(caminho: Path | str | None = None) -> sqlite3.Connection:
 def _migrar(con: sqlite3.Connection) -> None:
     """Atualiza bancos criados por versões anteriores."""
     colunas = {l[1] for l in con.execute("pragma table_info(atos)")}
-    if colunas and "data_publicacao" not in colunas:
+    if not colunas:
+        return
+    if "data_publicacao" not in colunas:
         con.execute("alter table atos add column data_publicacao text not null default ''")
-        con.commit()
+    if "origem_id" not in colunas:
+        con.execute("alter table atos add column origem_id text")
+    # Identidade antiga (sem filtro) impedia vários atos sem número no mesmo dia e órgão.
+    sql = con.execute("select sql from sqlite_master where name = 'atos_identidade'").fetchone()
+    if sql and "where" not in (sql[0] or "").lower():
+        con.execute("drop index atos_identidade")
+    con.commit()
 
 
 # --------------------------------------------------------------------------- validação
@@ -146,22 +166,43 @@ def validar(dados: dict) -> dict:
 # --------------------------------------------------------------------------- escrita
 
 
-def salvar(con: sqlite3.Connection, dados: dict) -> int:
-    """Insere ou atualiza (pela identidade tipo + número + órgão + data). Devolve o id."""
+def salvar(con: sqlite3.Connection, dados: dict, origem_id: str | None = None) -> int:
+    """Insere ou atualiza. Devolve o id.
+
+    Atualiza o ato existente quando encontra o mesmo `origem_id` (identificador na fonte oficial)
+    ou, para atos numerados, a mesma identidade (tipo + número + órgão + data).
+    """
     ato = validar(dados)
-    cur = con.execute(
-        """
-        insert into atos (tipo, numero, data, data_publicacao, orgao, categoria, ementa, texto, situacao, fonte_url)
-        values (:tipo, :numero, :data, :data_publicacao, :orgao, :categoria, :ementa, :texto, :situacao, :fonte_url)
-        on conflict (tipo, numero, orgao, data) do update set
-            data_publicacao = excluded.data_publicacao, categoria = excluded.categoria, ementa = excluded.ementa, texto = excluded.texto,
-            situacao = excluded.situacao, fonte_url = excluded.fonte_url,
-            atualizado_em = datetime('now')
-        returning id
-        """,
-        ato,
-    )
-    novo_id = cur.fetchone()[0]
+    existente = None
+    if origem_id:
+        existente = con.execute("select id from atos where origem_id = ?", (origem_id,)).fetchone()
+    if not existente and ato["numero"]:
+        existente = con.execute(
+            "select id from atos where tipo = :tipo and numero = :numero and orgao = :orgao and data = :data", ato
+        ).fetchone()
+    ato["origem_id"] = origem_id
+    if existente:
+        ato["id"] = existente[0]
+        con.execute(
+            """
+            update atos set tipo = :tipo, numero = :numero, data = :data, data_publicacao = :data_publicacao,
+                orgao = :orgao, categoria = :categoria, ementa = :ementa, texto = :texto, situacao = :situacao,
+                fonte_url = :fonte_url, origem_id = coalesce(:origem_id, origem_id), atualizado_em = datetime('now')
+            where id = :id
+            """,
+            ato,
+        )
+        novo_id = existente[0]
+    else:
+        novo_id = con.execute(
+            """
+            insert into atos (tipo, numero, data, data_publicacao, orgao, categoria, ementa, texto,
+                              situacao, fonte_url, origem_id)
+            values (:tipo, :numero, :data, :data_publicacao, :orgao, :categoria, :ementa, :texto,
+                    :situacao, :fonte_url, :origem_id)
+            """,
+            ato,
+        ).lastrowid
     _gravar_relacoes(con, novo_id, dados)
     con.commit()
     return novo_id

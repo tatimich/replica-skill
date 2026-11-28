@@ -1,0 +1,80 @@
+# Coletor automático do Diário Oficial da União (D.O.U.).
+# Lê a edição de cada dia no portal oficial (in.gov.br/leiturajornal), como o Monitor da Educação,
+# e guarda os atos dos órgãos abaixo com texto integral e link oficial.
+
+[fonte]
+base = "https://www.in.gov.br"
+# Seções lidas: do1 = Seção 1 (atos normativos). Extras e suplementos da Seção 1 também.
+# Acrescente "do2" (pessoal) ou "do3" (contratos, editais) se quiser essas seções.
+secoes = ["do1", "do1e", "do1a", "do1esp"]
+pausa_segundos = 1.5        # intervalo entre requisições, para não sobrecarregar o portal
+tentativas = 4
+tempo_limite_segundos = 120
+
+[filtro]
+# Órgãos acompanhados: trechos da hierarquia do órgão no D.O.U. (sem acento, minúsculas).
+# Mesma lista do Monitor da Educação (config/monitor_dou.json, monitored_markers).
+orgaos = [
+  "ministerio da educacao/gabinete do ministro",
+  "ministerio da educacao/secretaria-executiva",
+  "ministerio da educacao/secretaria executiva",
+  "ministerio da educacao/secretaria de educacao superior",
+  "ministerio da educacao/secretaria de regulacao e supervisao da educacao superior",
+  "ministerio da educacao/secretaria de educacao basica",
+  "ministerio da educacao/secretaria de educacao continuada, alfabetizacao de jovens e adultos, diversidade e inclusao",
+  "ministerio da educacao/secretaria de educacao profissional e tecnologica",
+  "ministerio da educacao/conselho nacional de educacao",
+  "ministerio da educacao/instituto nacional de estudos e pesquisas educacionais",
+  "ministerio da educacao/fundacao coordenacao de aperfeicoamento de pessoal de nivel superior",
+  "ministerio da educacao/fundo nacional de desenvolvimento da educacao",
+]
+# Atos da Presidência da República (leis, decretos, medidas provisórias) entram só quando
+# o texto trata de educação. Mesma regra condicional do Monitor.
+# "presidencia da republica" vem do Monitor. As duas linhas "atos do poder..." cobrem o nome com que
+# leis e decretos costumam aparecer no D.O.U.; confira na primeira coleta real e ajuste se preciso.
+orgaos_condicionais = [
+  "presidencia da republica",
+  "atos do poder legislativo",
+  "atos do poder executivo",
+]
+termos_condicionais = ["educacao", "ensino superior", "instituicao de ensino", "instituicoes de ensino"]
+# Tipos de ato ignorados (atos de pessoal e expedientes sem conteúdo normativo).
+tipos_ignorados = ["Retificação de Ato de Pessoal", "Apostila"]
+
+# Categorias (temas) atribuídas automaticamente pela primeira regra que combinar
+# com o órgão, título ou ementa (sem acento, minúsculas). Ajuste à vontade.
+[[categorias]]
+nome = "Residência em Saúde"
+termos = ["residencia medica", "residencia multiprofissional", "cnrm", "cnrms"]
+
+[[categorias]]
+nome = "Financiamento Estudantil"
+termos = ["fies", "financiamento estudantil", "prouni", "programa universidade para todos"]
+
+[[categorias]]
+nome = "Avaliação"
+termos = ["instituto nacional de estudos e pesquisas", "inep", "enade", "sinaes", "avaliacao"]
+
+[[categorias]]
+nome = "Pós-Graduação"
+termos = ["aperfeicoamento de pessoal de nivel superior", "capes", "pos-graduacao", "stricto sensu"]
+
+[[categorias]]
+nome = "Educação a Distância"
+termos = ["a distancia", "ead"]
+
+[[categorias]]
+nome = "Regulação e Supervisão"
+termos = ["regulacao e supervisao", "seres", "credenciamento", "autorizacao", "reconhecimento", "supervisao"]
+
+[[categorias]]
+nome = "Diretrizes Curriculares"
+termos = ["diretrizes curriculares", "conselho nacional de educacao"]
+
+[[categorias]]
+nome = "Educação Básica"
+termos = ["educacao basica"]
+
+[[categorias]]
+nome = "Educação Profissional"
+termos = ["educacao profissional", "tecnologica"]

@@ -17,4 +17,4 @@ F16,busca,Filtros por mês e dia,should,sim (verificado),yes,pela data do D.O.U.
 F17,detalhe,Data de publicação no D.O.U.,must,sim (verificado),yes,
 F18,detalhe,Atos relacionados (revoga/altera),should,sim (verificado),yes,links nos dois sentidos
 F19,detalhe,Contato para dúvidas,could,sim (verificado),yes,e-mail da marca
-F15,dados,Importador automático de fontes oficiais,could,—,no,depende de liberar rede e conferir termos
+F15,dados,Coleta automática do D.O.U. (diária e histórica),must,—,partial,código pronto e testado com simulação; falta a 1ª coleta real em máquina no Brasil

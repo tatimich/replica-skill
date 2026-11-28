@@ -8,6 +8,23 @@
   <input id="q" name="q" type="search" value="{{ f.q }}" placeholder="Buscar atos cadastrados">
   <button type="submit">Buscar</button>
 </form>
+<h2>Coleta automática do D.O.U.</h2>
+{% if coletas %}
+<p>{{ falhas }} dia(s)/seção(ões) com falha no histórico. Últimas coletas:</p>
+<table class="tabela">
+  <thead><tr><th>Edição</th><th>Seção</th><th>Matérias</th><th>Incluídos</th><th>Situação</th></tr></thead>
+  <tbody>
+  {% for c in coletas %}
+    <tr><td>{{ c.data | data_curta }}</td><td>{{ c.secao }}</td><td>{{ c.total }}</td><td>{{ c.incluidos }}</td>
+      <td>{% if c.erro %}<span class="etiqueta aviso" title="{{ c.erro }}">Falha</span>{% else %}Ok{% endif %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Nenhuma coleta registrada ainda. Veja no README como agendar <code>python -m legislacao.coletar</code>.</p>
+{% endif %}
+
+<h2>Atos</h2>
 <p>{{ total }} ato(s).</p>
 <table class="tabela">
   <thead><tr><th>Data</th><th>Ato</th><th>Categoria</th><th></th></tr></thead>

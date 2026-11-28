@@ -256,7 +256,11 @@ FORM_CAMPOS = db.CAMPOS
 def admin_inicio(request: Request, f: db.Filtros = Depends(ler_filtros)):
     with conexao() as con:
         atos, total = db.buscar(con, f)
-    return templates.TemplateResponse(request, "admin_lista.html", contexto(request, atos=atos, total=total, f=f))
+        coletas = [dict(l) for l in con.execute(
+            "select * from coletas where total > 0 or erro != '' order by data desc, secao limit 15")]
+        falhas = con.execute("select count(*) from coletas where erro != ''").fetchone()[0]
+    ctx = contexto(request, atos=atos, total=total, f=f, coletas=coletas, falhas=falhas)
+    return templates.TemplateResponse(request, "admin_lista.html", ctx)
 
 
 @app.get("/admin/novo", response_class=HTMLResponse, dependencies=[Depends(admin)])

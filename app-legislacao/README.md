@@ -25,7 +25,56 @@ ADMIN_SENHA=troque-esta-senha uvicorn legislacao.app:app --reload
 Abra http://localhost:8000. Administração em `/admin` (usuário `admin`, senha da variável `ADMIN_SENHA`;
 sem a variável, a administração fica desligada).
 
-## Cadastrar atos
+## Coleta automática (D.O.U.)
+
+O sistema busca os atos sozinho no Diário Oficial da União (portal oficial in.gov.br), pelo mesmo
+caminho do Monitor da Educação: abre a edição de cada dia, filtra pelos órgãos da educação e guarda
+cada ato com **texto integral, data do ato, data de publicação e link oficial**. Os órgãos, as seções
+e as regras de categoria ficam em `coletor.toml`.
+
+```bash
+python -m legislacao.coletar
+```
+
+Sem argumentos, coleta ontem e hoje (inclui edições extras). Para montar o acervo histórico:
+
+```bash
+python -m legislacao.coletar --de 2020-01-01
+```
+
+A carga histórica pode levar horas (uma pausa entre as páginas evita sobrecarregar o portal).
+Se for interrompida, rode o mesmo comando: ela continua de onde parou. O resultado de cada dia
+aparece em `/admin`.
+
+**Importante:** rode a coleta numa máquina com acesso ao portal do D.O.U. O portal recusa acessos
+de alguns servidores fora do Brasil (o mesmo motivo pelo qual o Monitor roda no seu computador).
+
+### Agendar todo dia
+
+Linux (cron), às 8h10 e às 20h10:
+
+```bash
+crontab -e
+```
+
+```
+10 8,20 * * * cd /caminho/app-legislacao && /usr/bin/python3 -m legislacao.coletar >> coleta.log 2>&1
+```
+
+Windows (Agendador de Tarefas), no Prompt de Comando:
+
+```bash
+schtasks /Create /TN "Coleta Legislacao" /SC DAILY /ST 08:10 /TR "cmd /c cd /d C:\caminho\app-legislacao && python -m legislacao.coletar >> coleta.log 2>&1"
+```
+
+### O que a coleta não faz
+
+- Não define a situação (vigente/alterada/revogada) nem as relações entre atos: o D.O.U. não traz
+  essa informação de forma estruturada. Ajuste em `/admin` quando necessário.
+- Quando a matéria não tem ementa destacada (comum em portarias e despachos), a ementa exibida é o
+  início do próprio texto oficial, nunca um resumo escrito pelo sistema.
+
+## Cadastrar ou corrigir atos manualmente
 
 - Pela web: `/admin/novo` ou `/admin/importar` (CSV).
 - Pela linha de comando: `python -m legislacao.importar meu-arquivo.csv`
